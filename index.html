@@ -1,0 +1,2537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum - Wallet Multiactivos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Variables y estilos base */
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --secondary: #6366f1;
+            --accent: #06b6d4;
+            --accent-light: #22d3ee;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --border: #e2e8f0;
+            --gradient-main: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            --gradient-card: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Estilos de utilidad */
+        .hidden {
+            display: none;
+        }
+
+        .text-positive {
+            color: var(--success);
+        }
+
+        .text-negative {
+            color: var(--danger);
+        }
+
+        .bg-positive {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .bg-negative {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Componente: Contenedor de la aplicación */
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--background);
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.06);
+            padding-bottom: 80px;
+        }
+
+        /* Componente: Cabecera de la aplicación */
+        .app-header {
+            background: var(--gradient-main);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            box-shadow: var(--shadow);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 24px;
+            color: white;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 4px;
+            transform: rotate(45deg);
+            opacity: 0.9;
+        }
+
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--accent-light);
+            border-radius: 2px;
+            bottom: 5px;
+            right: 5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: var(--transition);
+            backdrop-filter: blur(5px);
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        /* Componente: Contenido principal */
+        .main-content {
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Componente: Tarjeta de balance */
+        .balance-card {
+            background: var(--gradient-card);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--gradient-main);
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .balance-mxn {
+            font-size: 18px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .eye-toggle {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            opacity: 0.7;
+            transition: var(--transition);
+            font-size: 18px;
+        }
+
+        .eye-toggle:hover {
+            opacity: 1;
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        /* Componente: Grid de acciones */
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .action-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 12px;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .action-btn:hover {
+            background: rgba(37, 117, 252, 0.05);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary-light);
+        }
+
+        .action-icon {
+            font-size: 22px;
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .action-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* Componente: Tabs de mercados */
+        .markets-tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .market-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .market-tab.active {
+            background: var(--gradient-main);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        /* Componente: Título de sección */
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-primary);
+        }
+
+        .section-title span {
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .see-all {
+            font-size: 12px;
+            color: var(--accent);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+
+        /* Componente: Lista de activos */
+        .asset-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .asset-item {
+            display: flex;
+            align-items: center;
+            padding: 18px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            transition: var(--transition);
+            cursor: pointer;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .asset-item:hover {
+            background: rgba(37, 117, 252, 0.05);
+            transform: translateX(4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary-light);
+        }
+
+        .asset-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--gradient-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 16px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .asset-details {
+            flex: 1;
+        }
+
+        .asset-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        .asset-amount {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .asset-value {
+            text-align: right;
+        }
+
+        .asset-price {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .asset-change {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        /* Componente: Navegación inferior */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            border-top: 1px solid var(--border);
+            z-index: 1000;
+            max-width: 480px;
+            margin: 0 auto;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 12px;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 8px 16px;
+            border-radius: 12px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        /* Componente: Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1001;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 25px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--shadow-hover);
+            animation: modalFadeIn 0.3s ease;
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        /* Componente: Formulario */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--gradient-main);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* Animaciones */
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .app-container {
+                border-radius: 0;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+            
+            .actions {
+                gap: 10px;
+            }
+            
+            .action-btn {
+                padding: 12px 8px;
+            }
+            
+            .balance-amount {
+                font-size: 32px;
+            }
+            
+            .asset-item {
+                padding: 15px;
+            }
+        }
+
+        /* Mejoras para Academy */
+        .academy-module {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .academy-module-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .academy-module-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--gradient-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            margin-right: 15px;
+        }
+
+        .academy-module-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .academy-module-content {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            margin: 15px 0;
+            background: #000;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .reading-item {
+            padding: 15px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .reading-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+
+        .reading-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Profile Modal */
+        .profile-modal-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .profile-modal-item:hover {
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .profile-modal-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gradient-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .profile-modal-text {
+            flex: 1;
+        }
+
+        .profile-modal-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .profile-modal-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo">
+                <div class="logo-icon" style="width: 60px; height: 60px; margin: 0 auto;"></div>
+            </div>
+            <h1 class="login-title">Quantum</h1>
+            <p class="login-subtitle">Tu billetera multiactivos segura</p>
+            
+            <div class="form-group">
+                <input type="email" class="form-input" id="loginEmail" placeholder="Correo electrónico" value="usuario@quantum.com">
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-input" id="loginPassword" placeholder="Contraseña" value="password123">
+            </div>
+            <button class="btn btn-primary" onclick="authController.login()">Iniciar Sesión</button>
+            
+            <p style="margin-top: 20px; color: var(--text-secondary); font-size: 14px;">
+                ¿No tienes cuenta? <a href="#" style="color: var(--primary);">Regístrate aquí</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="appContainer" style="display: none;">
+        <div class="bg-effects">
+            <div class="bg-circle circle-1"></div>
+            <div class="bg-circle circle-2"></div>
+        </div>
+        
+        <div class="app-header">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                Quantum
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" onclick="notificationController.showNotificationCenter()">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button class="header-btn" onclick="syncController.syncData()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="header-btn" onclick="profileController.showProfileModal()">
+                    <i class="fas fa-user"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- Home Tab -->
+            <div class="tab-content active" id="home-tab">
+                <div class="balance-card">
+                    <div class="balance-label">Balance Total</div>
+                    <div class="balance-amount" id="balanceAmount">$124,852.40</div>
+                    <div class="balance-mxn">
+                        <span id="balanceMXN">≈ $2,356,420.80 MXN</span>
+                        <button class="eye-toggle" id="eyeToggle" onclick="balanceController.toggleBalance()">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button class="action-btn" onclick="transactionController.showSendModal()">
+                        <div class="action-icon"><i class="fas fa-paper-plane"></i></div>
+                        <div class="action-label">Enviar</div>
+                    </button>
+                    <button class="action-btn" onclick="transactionController.showReceiveModal()">
+                        <div class="action-icon"><i class="fas fa-download"></i></div>
+                        <div class="action-label">Recibir</div>
+                    </button>
+                    <button class="action-btn" onclick="transactionController.showSwapModal()">
+                        <div class="action-icon"><i class="fas fa-exchange-alt"></i></div>
+                        <div class="action-label">Convertir</div>
+                    </button>
+                    <button class="action-btn" onclick="transactionController.showBuyModal()">
+                        <div class="action-icon"><i class="fas fa-plus"></i></div>
+                        <div class="action-label">Comprar</div>
+                    </button>
+                </div>
+
+                <div class="markets-tabs">
+                    <div class="market-tab active" onclick="marketController.switchMarket('crypto')">Crypto</div>
+                    <div class="market-tab" onclick="marketController.switchMarket('stocks')">Acciones</div>
+                    <div class="market-tab" onclick="marketController.switchMarket('etfs')">ETFs</div>
+                    <div class="market-tab" onclick="marketController.switchMarket('futures')">Futuros</div>
+                </div>
+                
+                <div class="section-title">
+                    <span>Tus Activos</span>
+                    <a href="#" class="see-all" onclick="portfolioController.refreshPortfolio()">Actualizar <i class="fas fa-sync-alt"></i></a>
+                </div>
+                
+                <div class="asset-list" id="crypto-assets">
+                    <!-- Los activos se cargarán dinámicamente -->
+                </div>
+
+                <div class="asset-list hidden" id="stocks-assets">
+                    <!-- Los activos se cargarán dinámicamente -->
+                </div>
+            </div>
+            
+            <!-- Charts Tab -->
+            <div class="tab-content" id="charts-tab">
+                <div class="section-title">
+                    <span>Gráficos de Trading</span>
+                </div>
+
+                <div class="trading-pair-selector">
+                    <div class="trading-pair active" onclick="tradingController.switchTradingPair('BTCUSD')">BTC/USD</div>
+                    <div class="trading-pair" onclick="tradingController.switchTradingPair('ETHUSD')">ETH/USD</div>
+                    <div class="trading-pair" onclick="tradingController.switchTradingPair('AAPL')">AAPL</div>
+                    <div class="trading-pair" onclick="tradingController.switchTradingPair('TSLA')">TSLA</div>
+                    <div class="trading-pair" onclick="tradingController.switchTradingPair('SPY')">SPY</div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title" id="chart-title">BTC/USD</div>
+                        <div class="chart-timeframes">
+                            <div class="timeframe-btn active">1D</div>
+                            <div class="timeframe-btn">1W</div>
+                            <div class="timeframe-btn">1M</div>
+                            <div class="timeframe-btn">1Y</div>
+                        </div>
+                    </div>
+                    <div class="simple-chart" id="simple-price-chart">
+                        <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="chart-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#2563eb" stop-opacity="0.3" />
+                                    <stop offset="100%" stop-color="#2563eb" stop-opacity="0" />
+                                </linearGradient>
+                            </defs>
+                            <path class="chart-line" id="chart-line" d="M0,200 L50,150 L100,170 L150,120 L200,140 L250,100 L300,130 L350,90 L400,110" />
+                            <path class="chart-area" id="chart-area" d="M0,200 L50,150 L100,170 L150,120 L200,140 L250,100 L300,130 L350,90 L400,110 L400,200 L0,200" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="trading-view">
+                    <div class="trading-controls">
+                        <div class="loading-overlay" id="tradeLoading">
+                            <div class="loader"></div>
+                        </div>
+                        <button class="trade-btn buy-btn" onclick="tradingController.showTradeModal('buy')">Comprar</button>
+                        <button class="trade-btn sell-btn" onclick="tradingController.showTradeModal('sell')">Vender</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" class="form-input" placeholder="0.0" id="trade-amount" oninput="tradingController.calculateTradeTotal()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Precio</label>
+                        <input type="text" class="form-input" id="current-price" value="$57,342.80" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total</label>
+                        <input type="text" class="form-input" id="trade-total" value="$0.00" readonly>
+                    </div>
+                    <button class="btn btn-primary" onclick="tradingController.executeTrade()">Ejecutar Orden</button>
+                </div>
+
+                <!-- Sección de MetaTrader API -->
+                <div class="metatrader-section">
+                    <div class="section-title">
+                        <span>Conexión con MetaTrader</span>
+                    </div>
+                    
+                    <div class="api-status">
+                        <div class="status-indicator" id="mt5StatusIndicator"></div>
+                        <span id="mt5StatusText">Desconectado</span>
+                    </div>
+                    
+                    <div class="api-controls">
+                        <button class="btn btn-primary" onclick="mt5Controller.connectToMT5()">Conectar a MT5</button>
+                        <button class="btn" style="background: var(--danger); color: white;" onclick="mt5Controller.disconnectFromMT5()">Desconectar</button>
+                    </div>
+                    
+                    <div class="mt5-form" style="display: none;" id="mt5Form">
+                        <div class="form-group">
+                            <label class="form-label">Servidor MT5</label>
+                            <input type="text" class="form-input" id="mt5Server" placeholder="ej: broker.mt5.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Número de cuenta</label>
+                            <input type="number" class="form-input" id="mt5Account" placeholder="12345678">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Contraseña</label>
+                            <input type="password" class="form-input" id="mt5Password" placeholder="********">
+                        </div>
+                        <button class="btn btn-primary" onclick="mt5Controller.saveMT5Credentials()">Guardar y conectar</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Academy Tab -->
+            <div class="tab-content" id="academy-tab">
+                <div class="academy-hero">
+                    <h2>Quantum Academy</h2>
+                    <p>Aprende a invertir como un profesional con nuestro método exclusivo</p>
+                </div>
+                
+                <div class="section-title">
+                    <span>Método Quantum</span>
+                </div>
+                
+                <div class="academy-module">
+                    <div class="academy-module-header">
+                        <div class="academy-module-icon">
+                            <i class="fas fa-atom"></i>
+                        </div>
+                        <div class="academy-module-title">El Enfoque Quantum</div>
+                    </div>
+                    <div class="academy-module-content">
+                        <p>Nuestro método combina análisis técnico, fundamental y sentimiento del mercado para identificar oportunidades de inversión con alto potencial de rentabilidad.</p>
+                        <p>Basado en 3 pilares fundamentales: <strong>Momentum</strong>, <strong>Valor</strong> y <strong>Sentimiento</strong>, aplicados a través de algoritmos propietarios que analizan millones de puntos de datos en tiempo real.</p>
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    <span>Lo que Aprenderás</span>
+                </div>
+                
+                <div class="module-grid">
+                    <div class="module-card">
+                        <div class="module-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="module-name">Análisis Técnico</div>
+                        <div class="module-desc">Domina gráficos e indicadores</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="module-card">
+                        <div class="module-icon">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div class="module-name">Gestión de Riesgo</div>
+                        <div class="module-desc">Protege y haz crecer tu capital</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 40%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="module-card">
+                        <div class="module-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div class="module-name">Psicología</div>
+                        <div class="module-desc">Mentalidad del trader exitoso</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 30%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="module-card">
+                        <div class="module-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="module-name">Automatización</div>
+                        <div class="module-desc">Estrategias algorítmicas</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 20%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    <span>Videos Educativos</span>
+                </div>
+                
+                <div class="academy-module">
+                    <div class="academy-module-header">
+                        <div class="academy-module-icon">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                        <div class="academy-module-title">Introducción al Trading</div>
+                    </div>
+                    <div class="academy-module-content">
+                        <p>Accede a nuestra biblioteca de videos educativos con lecciones paso a paso, análisis de mercado en tiempo real y entrevistas con traders profesionales.</p>
+                        
+                        <div class="video-container">
+                            <!-- Simulación de video de YouTube -->
+                            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#1a1a1a; color:white;">
+                                <div style="text-align:center;">
+                                    <i class="fas fa-play-circle" style="font-size:48px; margin-bottom:10px;"></i>
+                                    <p>Video: Estrategias de Entrada y Salida</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p style="margin-top:15px; font-size:14px; text-align:center;">
+                            <a href="#" style="color:var(--primary);">Ver más videos</a>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    <span>Lecturas</span>
+                </div>
+                
+                <div class="academy-module">
+                    <div class="academy-module-header">
+                        <div class="academy-module-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="academy-module-title">Biblioteca Quantum</div>
+                    </div>
+                    <div class="academy-module-content">
+                        <p>Amplía tus conocimientos con nuestra colección de lecturas esenciales, desde conceptos básicos hasta estrategias avanzadas.</p>
+                        
+                        <div class="reading-item">
+                            <div class="reading-title">Análisis Técnico para Principiantes</div>
+                            <div class="reading-description">Guía completa para entender gráficos e indicadores técnicos</div>
+                        </div>
+                        
+                        <div class="reading-item">
+                            <div class="reading-title">Gestión de Riesgo en el Trading</div>
+                            <div class="reading-description">Cómo proteger tu capital y maximizar ganancias</div>
+                        </div>
+                        
+                        <div class="reading-item">
+                            <div class="reading-title">Psicología del Trader Exitoso</div>
+                            <div class="reading-description">Desarrolla la mentalidad adecuada para el trading consistente</div>
+                        </div>
+                        
+                        <p style="margin-top:15px; font-size:14px; text-align:center;">
+                            <a href="#" style="color:var(--primary);">Ver todas las lecturas</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transactions Tab -->
+            <div class="tab-content" id="transactions-tab">
+                <div class="section-title">
+                    <span>Historial de Transacciones</span>
+                    <a href="#" class="see-all" onclick="transactionController.loadTransactions()">Actualizar <i class="fas fa-sync-alt"></i></a>
+                </div>
+                
+                <div class="asset-list" id="transactions-list">
+                    <!-- Las transacciones se cargarán dinámicamente -->
+                </div>
+            </div>
+            
+            <!-- Markets Tab -->
+            <div class="tab-content" id="markets-tab">
+                <div class="section-title">
+                    <span>Mercados Disponibles</span>
+                    <a href="#" class="see-all">Ver todos <i class="fas fa-chevron-right"></i></a>
+                </div>
+
+                <div class="search-bar">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Buscar activos..." oninput="marketController.searchAssets(this.value)">
+                </div>
+
+                <div class="markets-tabs">
+                    <div class="market-tab active" onclick="marketController.switchMarketTab('crypto')">Crypto</div>
+                    <div class="market-tab" onclick="marketController.switchMarketTab('stocks')">Acciones</div>
+                    <div class="market-tab" onclick="marketController.switchMarketTab('etfs')">ETFs</div>
+                    <div class="market-tab" onclick="marketController.switchMarketTab('futures')">Futuros</div>
+                </div>
+
+                <div class="asset-list" id="markets-crypto">
+                    <!-- Los mercados se cargarán dinámicamente -->
+                </div>
+
+                <div class="asset-list hidden" id="markets-stocks">
+                    <!-- Los mercados se cargarán dinámicamente -->
+                </div>
+            </div>
+            
+            <!-- Profile Tab -->
+            <div class="tab-content" id="profile-tab">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar">JL</div>
+                    <div class="profile-name" id="profileName">Juan López</div>
+                    <div class="profile-email" id="profileEmail">juan.lopez@email.com</div>
+                </div>
+                
+                <div class="section-title">
+                    <span>Mi Cuenta</span>
+                </div>
+                
+                <div class="asset-list">
+                    <div class="asset-item" onclick="profileController.showSecuritySettings()">
+                        <div class="asset-icon" style="background: var(--success);"><i class="fas fa-shield-alt"></i></div>
+                        <div class="asset-details">
+                            <div class="asset-name">Seguridad</div>
+                            <div class="asset-amount">Autenticación de dos factores, contraseña</div>
+                        </div>
+                        <div class="asset-value">
+                            <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="asset-item" onclick="profileController.showNotificationsSettings()">
+                        <div class="asset-icon" style="background: var(--warning);"><i class="fas fa-bell"></i></div>
+                        <div class="asset-details">
+                            <div class="asset-name">Notificaciones</div>
+                            <div class="asset-amount">Alertas de precios, transacciones</div>
+                        </div>
+                        <div class="asset-value">
+                            <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="asset-item" onclick="profileController.showBackupSettings()">
+                        <div class="asset-icon" style="background: var(--accent);"><i class="fas fa-key"></i></div>
+                        <div class="asset-details">
+                            <div class="asset-name">Respaldar Wallet</div>
+                            <div class="asset-amount">Frase de recuperación de 12 palabras</div>
+                        </div>
+                        <div class="asset-value">
+                            <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    <span>Preferencias</span>
+                </div>
+
+                <div class="asset-list">
+                    <div class="asset-item" onclick="profileController.showAppearanceSettings()">
+                        <div class="asset-icon" style="background: var(--primary);"><i class="fas fa-paint-brush"></i></div>
+                        <div class="asset-details">
+                            <div class="asset-name">Apariencia</div>
+                            <div class="asset-amount">Tema claro/oscuro, idioma</div>
+                        </div>
+                        <div class="asset-value">
+                            <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                        </div>
+                    </div>
+
+                    <div class="asset-item" onclick="profileController.showPrivacySettings()">
+                        <div class="asset-icon" style="background: var(--secondary);"><i class="fas fa-user-lock"></i></div>
+                        <div class="asset-details">
+                            <div class="asset-name">Privacidad</div>
+                            <div class="asset-amount">Configuración de datos y privacidad</div>
+                        </div>
+                        <div class="asset-value">
+                            <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                        </div>
+                    </div>
+
+                    <div class="asset-item" onclick="profileController.showHelp()">
+                        <div class="asset-icon" style="background: var(--accent);"><i class="fas fa-question-circle"></i></div>
+                        <div class="asset-details">
+                            <div class="asset-name">Ayuda y Soporte</div>
+                            <div class="asset-amount">Centro de ayuda, contactar soporte</div>
+                        </div>
+                        <div class="asset-value">
+                            <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="navigationController.switchTab('home')">
+                <div class="nav-icon"><i class="fas fa-home"></i></div>
+                <div>Inicio</div>
+            </div>
+            <div class="nav-item" onclick="navigationController.switchTab('charts')">
+                <div class="nav-icon"><i class="fas fa-chart-line"></i></div>
+                <div>Gráficos</div>
+            </div>
+            <div class="nav-item" onclick="navigationController.switchTab('academy')">
+                <div class="nav-icon"><i class="fas fa-graduation-cap"></i></div>
+                <div>Academy</div>
+            </div>
+            <div class="nav-item" onclick="navigationController.switchTab('markets')">
+                <div class="nav-icon"><i class="fas fa-coins"></i></div>
+                <div>Mercados</div>
+            </div>
+            <div class="nav-item" onclick="navigationController.switchTab('profile')">
+                <div class="nav-icon"><i class="fas fa-user"></i></div>
+                <div>Perfil</div>
+            </div>
+        </div>
+        
+        <!-- Profile Modal -->
+        <div class="modal" id="profileModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Mi Perfil</h2>
+                    <button class="close-modal" onclick="uiController.hideModal('profileModal')">&times;</button>
+                </div>
+                
+                <div class="profile-header">
+                    <div class="profile-avatar">JL</div>
+                    <div class="profile-name">Juan López</div>
+                    <div class="profile-email">juan.lopez@email.com</div>
+                </div>
+                
+                <div class="profile-modal-item">
+                    <div class="profile-modal-icon">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                    <div class="profile-modal-text">
+                        <div class="profile-modal-title">Editar Perfil</div>
+                        <div class="profile-modal-subtitle">Actualiza tu información personal</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                </div>
+                
+                <div class="profile-modal-item">
+                    <div class="profile-modal-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="profile-modal-text">
+                        <div class="profile-modal-title">Seguridad</div>
+                        <div class="profile-modal-subtitle">Gestiona contraseñas y 2FA</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                </div>
+                
+                <div class="profile-modal-item">
+                    <div class="profile-modal-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="profile-modal-text">
+                        <div class="profile-modal-title">Mis Direcciones</div>
+                        <div class="profile-modal-subtitle">Administra direcciones de wallets</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                </div>
+                
+                <div class="profile-modal-item">
+                    <div class="profile-modal-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="profile-modal-text">
+                        <div class="profile-modal-title">Historial de Transacciones</div>
+                        <div class="profile-modal-subtitle">Ver todas tus operaciones</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                </div>
+                
+                <div class="profile-modal-item" onclick="authController.logout()">
+                    <div class="profile-modal-icon" style="background: var(--danger);">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                    <div class="profile-modal-text">
+                        <div class="profile-modal-title">Cerrar Sesión</div>
+                        <div class="profile-modal-subtitle">Salir de tu cuenta</div>
+                    </div>
+                    <i class="fas fa-chevron-right" style="color: var(--text-tertiary);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==============================
+        // ARQUITECTURA MODULAR
+        // ==============================
+
+        // Módulo: Base de datos simulada
+        const QuantumDB = {
+            users: [
+                {
+                    id: 1,
+                    email: "usuario@quantum.com",
+                    password: "password123",
+                    name: "Juan López",
+                    avatar: "JL",
+                    portfolio: {
+                        balance: 124852.40,
+                        assets: [
+                            { symbol: "ETH", amount: 2.45, value: 87425.60, change: 2.35 },
+                            { symbol: "BTC", amount: 0.0052, value: 6342.80, change: 1.78 },
+                            { symbol: "USDC", amount: 1250, value: 21000.00, change: 0.00 },
+                            { symbol: "AAPL", amount: 5, value: 912.50, change: 1.25 },
+                            { symbol: "TSLA", amount: 3, value: 712.35, change: -0.85 }
+                        ]
+                    },
+                    transactions: [
+                        { id: 1, type: "send", asset: "ETH", amount: -0.12, to: "Carlos Mendoza", date: "Hace 2 horas", status: "completed" },
+                        { id: 2, type: "receive", asset: "BTC", amount: 0.025, from: "Ana López", date: "Ayer a las 15:23", status: "completed" },
+                        { id: 3, type: "swap", asset: "ETH", amount: -0.5, details: "ETH → USDC", date: "12 Oct 2023", status: "completed" },
+                        { id: 4, type: "buy", asset: "AAPL", amount: 5, price: 865.25, date: "5 Oct 2023", status: "completed" },
+                        { id: 5, type: "deposit", asset: "MXN", amount: 25000, date: "3 Oct 2023", status: "completed" }
+                    ],
+                    markets: {
+                        crypto: [
+                            { symbol: "BTC", name: "Bitcoin", price: 57342.80, change: 1.78 },
+                            { symbol: "ETH", name: "Ethereum", price: 3425.60, change: 2.35 },
+                            { symbol: "SOL", name: "Solana", price: 102.45, change: 5.32 },
+                            { symbol: "ADA", name: "Cardano", price: 0.45, change: -1.25 },
+                            { symbol: "DOT", name: "Polkadot", price: 6.80, change: 3.45 }
+                        ],
+                        stocks: [
+                            { symbol: "AAPL", name: "Apple Inc.", price: 182.50, change: 1.25 },
+                            { symbol: "TSLA", name: "Tesla Inc.", price: 237.45, change: -0.85 },
+                            { symbol: "MSFT", name: "Microsoft Corp.", price: 345.28, change: 2.15 },
+                            { symbol: "AMZN", name: "Amazon.com Inc.", price: 145.75, change: 0.95 },
+                            { symbol: "GOOGL", name: "Alphabet Inc.", price: 142.30, change: 1.75 }
+                        ]
+                    },
+                    mt5Credentials: null
+                }
+            ],
+            currentUser: null,
+            authToken: null,
+            mt5Connected: false,
+            
+            // Métodos de autenticación
+            login: function(email, password) {
+                const user = this.users.find(u => u.email === email && u.password === password);
+                if (user) {
+                    this.currentUser = user;
+                    this.authToken = this.generateToken();
+                    return { success: true, token: this.authToken, user: user };
+                }
+                return { success: false, error: "Credenciales inválidas" };
+            },
+            
+            generateToken: function() {
+                return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + 
+                       btoa(JSON.stringify({ userId: this.currentUser.id, exp: Date.now() + 86400000 })) + 
+                       '.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+            },
+            
+            verifyToken: function(token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    return payload.exp > Date.now();
+                } catch (e) {
+                    return false;
+                }
+            },
+            
+            logout: function() {
+                this.currentUser = null;
+                this.authToken = null;
+                this.mt5Connected = false;
+            },
+            
+            // Métodos de portfolio
+            getPortfolio: function() {
+                if (!this.currentUser) return null;
+                return this.currentUser.portfolio;
+            },
+            
+            updatePortfolio: function(updates) {
+                if (!this.currentUser) return false;
+                Object.assign(this.currentUser.portfolio, updates);
+                return true;
+            },
+            
+            // Métodos de transacciones
+            getTransactions: function() {
+                if (!this.currentUser) return [];
+                return this.currentUser.transactions;
+            },
+            
+            addTransaction: function(transaction) {
+                if (!this.currentUser) return false;
+                transaction.id = this.currentUser.transactions.length + 1;
+                this.currentUser.transactions.unshift(transaction);
+                return true;
+            },
+            
+            // Métodos de mercado
+            getMarketData: function(type) {
+                if (!this.currentUser) return [];
+                return this.currentUser.markets[type] || [];
+            },
+            
+            // Métodos de MetaTrader
+            connectToMT5: function(credentials) {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        if (credentials && credentials.server && credentials.account && credentials.password) {
+                            this.currentUser.mt5Credentials = credentials;
+                            this.mt5Connected = true;
+                            resolve({ success: true, message: "Conectado a MetaTrader 5" });
+                        } else {
+                            resolve({ success: false, error: "Credenciales inválidas" });
+                        }
+                    }, 2000);
+                });
+            },
+            
+            disconnectFromMT5: function() {
+                this.mt5Connected = false;
+                return { success: true, message: "Desconectado de MetaTrader 5" };
+            },
+            
+            getMT5Status: function() {
+                return this.mt5Connected;
+            },
+            
+            // Simular llamadas API con delay
+            apiCall: function(endpoint, data = null) {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        let response;
+                        
+                        switch(endpoint) {
+                            case '/auth/login':
+                                response = this.login(data.email, data.password);
+                                break;
+                            case '/portfolio':
+                                response = this.getPortfolio();
+                                break;
+                            case '/transactions':
+                                response = this.getTransactions();
+                                break;
+                            case '/markets':
+                                response = this.getMarketData(data.type);
+                                break;
+                            case '/transaction/send':
+                                response = this.addTransaction(data);
+                                break;
+                            case '/trade/execute':
+                                response = this.executeTrade(data);
+                                break;
+                            case '/swap/execute':
+                                response = this.executeSwap(data);
+                                break;
+                            case '/buy/execute':
+                                response = this.executeBuy(data);
+                                break;
+                            case '/mt5/connect':
+                                response = this.connectToMT5(data);
+                                break;
+                            case '/mt5/disconnect':
+                                response = this.disconnectFromMT5();
+                                break;
+                            case '/mt5/status':
+                                response = { connected: this.getMT5Status() };
+                                break;
+                            default:
+                                response = { error: "Endpoint no encontrado" };
+                        }
+                        
+                        resolve(response);
+                    }, 800); // Simular delay de red
+                });
+            },
+            
+            executeTrade: function(tradeData) {
+                if (!this.currentUser) return { success: false };
+                
+                // Simular ejecución de trade
+                const transaction = {
+                    type: tradeData.side,
+                    asset: tradeData.symbol,
+                    amount: tradeData.side === 'buy' ? tradeData.amount : -tradeData.amount,
+                    price: tradeData.price,
+                    total: tradeData.amount * tradeData.price,
+                    date: new Date().toLocaleString(),
+                    status: "completed"
+                };
+                
+                this.addTransaction(transaction);
+                
+                // Actualizar portfolio (simulación)
+                const asset = this.currentUser.portfolio.assets.find(a => a.symbol === tradeData.symbol);
+                if (asset) {
+                    if (tradeData.side === 'buy') {
+                        asset.amount += tradeData.amount;
+                        asset.value = asset.amount * tradeData.price;
+                    } else {
+                        asset.amount -= tradeData.amount;
+                        asset.value = asset.amount * tradeData.price;
+                    }
+                }
+                
+                return { success: true, transaction };
+            },
+            
+            executeSwap: function(swapData) {
+                if (!this.currentUser) return { success: false };
+                
+                // Simular ejecución de swap
+                const transaction = {
+                    type: "swap",
+                    asset: swapData.fromAsset,
+                    amount: -swapData.fromAmount,
+                    details: `${swapData.fromAsset} → ${swapData.toAsset}`,
+                    date: new Date().toLocaleString(),
+                    status: "completed"
+                };
+                
+                this.addTransaction(transaction);
+                
+                // Actualizar portfolio (simulación)
+                const fromAsset = this.currentUser.portfolio.assets.find(a => a.symbol === swapData.fromAsset);
+                const toAsset = this.currentUser.portfolio.assets.find(a => a.symbol === swapData.toAsset);
+                
+                if (fromAsset) {
+                    fromAsset.amount -= swapData.fromAmount;
+                    fromAsset.value = fromAsset.amount * (fromAsset.value / fromAsset.amount);
+                }
+                
+                if (toAsset) {
+                    toAsset.amount += swapData.toAmount;
+                    toAsset.value = toAsset.amount * (toAsset.value / toAsset.amount);
+                }
+                
+                return { success: true, transaction };
+            },
+            
+            executeBuy: function(buyData) {
+                if (!this.currentUser) return { success: false };
+                
+                // Simular ejecución de compra
+                const transaction = {
+                    type: "buy",
+                    asset: buyData.asset,
+                    amount: buyData.amount,
+                    price: buyData.price,
+                    total: buyData.amount * buyData.price,
+                    date: new Date().toLocaleString(),
+                    status: "completed"
+                };
+                
+                this.addTransaction(transaction);
+                
+                // Actualizar portfolio (simulación)
+                const asset = this.currentUser.portfolio.assets.find(a => a.symbol === buyData.asset);
+                if (asset) {
+                    asset.amount += buyData.amount;
+                    asset.value = asset.amount * buyData.price;
+                } else {
+                    this.currentUser.portfolio.assets.push({
+                        symbol: buyData.asset,
+                        amount: buyData.amount,
+                        value: buyData.amount * buyData.price,
+                        change: 0
+                    });
+                }
+                
+                return { success: true, transaction };
+            }
+        };
+
+        // Módulo: Controlador de Autenticación
+        const authController = {
+            login: async function() {
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                const response = await QuantumDB.apiCall('/auth/login', { email, password });
+                
+                if (response.success) {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('appContainer').style.display = 'block';
+                    
+                    // Actualizar perfil
+                    document.getElementById('profileAvatar').textContent = response.user.avatar;
+                    document.getElementById('profileName').textContent = response.user.name;
+                    document.getElementById('profileEmail').textContent = response.user.email;
+                    
+                    // Inicializar la app
+                    await initApp();
+                    
+                    notificationController.showNotification('Sesión iniciada correctamente');
+                } else {
+                    notificationController.showNotification('Error: ' + response.error, 'error');
+                }
+            },
+            
+            logout: function() {
+                QuantumDB.logout();
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('appContainer').style.display = 'none';
+                notificationController.showNotification('Sesión cerrada');
+            }
+        };
+
+        // Módulo: Controlador de Navegación
+        const navigationController = {
+            switchTab: function(tab) {
+                // Ocultar todas las pestañas
+                document.querySelectorAll('.tab-content').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // Desactivar todos los elementos de navegación
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Activar la pestaña seleccionada
+                document.getElementById(`${tab}-tab`).classList.add('active');
+                
+                // Activar el elemento de navegación correspondiente
+                const navItems = document.querySelectorAll('.nav-item');
+                const activeIndex = Array.from(navItems).findIndex(item => 
+                    item.getAttribute('onclick').includes(`'${tab}'`)
+                );
+                
+                if (activeIndex >= 0) {
+                    navItems[activeIndex].classList.add('active');
+                }
+                
+                // Si cambiamos a la pestaña de gráficos, actualizamos el gráfico
+                if (tab === 'charts') {
+                    tradingController.updateSimpleChart(tradingController.currentTradingPair);
+                }
+            }
+        };
+
+        // Módulo: Controlador de Balance
+        const balanceController = {
+            balanceVisible: true,
+            
+            toggleBalance: function() {
+                const balanceAmount = document.getElementById('balanceAmount');
+                const balanceMXN = document.getElementById('balanceMXN');
+                const eyeToggle = document.getElementById('eyeToggle');
+                
+                this.balanceVisible = !this.balanceVisible;
+                
+                if (this.balanceVisible) {
+                    balanceAmount.textContent = '$124,852.40';
+                    balanceMXN.textContent = '≈ $2,356,420.80 MXN';
+                    eyeToggle.innerHTML = '<i class="fas fa-eye"></i>';
+                } else {
+                    balanceAmount.textContent = '•••••••';
+                    balanceMXN.textContent = '≈ ••••••••• MXN';
+                    eyeToggle.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                }
+            }
+        };
+
+        // Módulo: Controlador de Portfolio
+        const portfolioController = {
+            refreshPortfolio: async function() {
+                notificationController.showNotification('Actualizando portfolio...');
+                await this.loadPortfolio();
+                notificationController.showNotification('Portfolio actualizado');
+            },
+            
+            loadPortfolio: async function() {
+                const portfolio = await QuantumDB.apiCall('/portfolio');
+                
+                if (portfolio) {
+                    // Actualizar balance
+                    document.getElementById('balanceAmount').textContent = `$${portfolio.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    
+                    // Actualizar activos
+                    this.renderAssets(portfolio.assets);
+                }
+            },
+            
+            renderAssets: function(assets) {
+                const cryptoContainer = document.getElementById('crypto-assets');
+                const stocksContainer = document.getElementById('stocks-assets');
+                
+                // Limpiar contenedores
+                cryptoContainer.innerHTML = '';
+                stocksContainer.innerHTML = '';
+                
+                // Separar activos por tipo
+                const cryptoAssets = assets.filter(a => ['ETH', 'BTC', 'USDC', 'SOL', 'ADA', 'DOT'].includes(a.symbol));
+                const stockAssets = assets.filter(a => ['AAPL', 'TSLA', 'MSFT', 'AMZN', 'GOOGL'].includes(a.symbol));
+                
+                // Renderizar criptoactivos
+                cryptoAssets.forEach(asset => {
+                    const changeClass = asset.change >= 0 ? 'positive' : 'negative';
+                    const changeIcon = asset.change >= 0 ? '▲' : '▼';
+                    
+                    cryptoContainer.innerHTML += `
+                        <div class="asset-item" onclick="assetController.showAssetDetails('${asset.symbol}')">
+                            <div class="asset-icon"><i class="fab fa-${asset.symbol.toLowerCase()}"></i></div>
+                            <div class="asset-details">
+                                <div class="asset-name">${this.getAssetName(asset.symbol)}</div>
+                                <div class="asset-amount">${asset.amount} ${asset.symbol}</div>
+                            </div>
+                            <div class="asset-value">
+                                <div class="asset-price">$${asset.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                <div class="asset-change ${changeClass}">${changeIcon} ${Math.abs(asset.change)}%</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                // Renderizar acciones
+                stockAssets.forEach(asset => {
+                    const changeClass = asset.change >= 0 ? 'positive' : 'negative';
+                    const changeIcon = asset.change >= 0 ? '▲' : '▼';
+                    
+                    stocksContainer.innerHTML += `
+                        <div class="asset-item" onclick="assetController.showAssetDetails('${asset.symbol}')">
+                            <div class="asset-icon" style="background: ${this.getStockColor(asset.symbol)};">${asset.symbol}</div>
+                            <div class="asset-details">
+                                <div class="asset-name">${this.getAssetName(asset.symbol)}</div>
+                                <div class="asset-amount">${asset.amount} acciones</div>
+                            </div>
+                            <div class="asset-value">
+                                <div class="asset-price">$${asset.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                <div class="asset-change ${changeClass}">${changeIcon} ${Math.abs(asset.change)}%</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            },
+            
+            getAssetName: function(symbol) {
+                const names = {
+                    'ETH': 'Ethereum',
+                    'BTC': 'Bitcoin',
+                    'USDC': 'USDC',
+                    'SOL': 'Solana',
+                    'ADA': 'Cardano',
+                    'DOT': 'Polkadot',
+                    'AAPL': 'Apple Inc.',
+                    'TSLA': 'Tesla Inc.',
+                    'MSFT': 'Microsoft Corp.',
+                    'AMZN': 'Amazon.com Inc.',
+                    'GOOGL': 'Alphabet Inc.'
+                };
+                return names[symbol] || symbol;
+            },
+            
+            getStockColor: function(symbol) {
+                const colors = {
+                    'AAPL': '#333',
+                    'TSLA': '#e82127',
+                    'MSFT': '#0070c0',
+                    'AMZN': '#ff9900',
+                    'GOOGL': '#4285f4'
+                };
+                return colors[symbol] || 'var(--primary)';
+            }
+        };
+
+        // Módulo: Controlador de Transacciones
+        const transactionController = {
+            loadTransactions: async function() {
+                const transactions = await QuantumDB.apiCall('/transactions');
+                
+                if (transactions && transactions.length > 0) {
+                    this.renderTransactions(transactions);
+                }
+            },
+            
+            renderTransactions: function(transactions) {
+                const container = document.getElementById('transactions-list');
+                container.innerHTML = '';
+                
+                transactions.forEach(transaction => {
+                    let icon, bgColor, sign;
+                    
+                    switch(transaction.type) {
+                        case 'send':
+                            icon = 'fa-arrow-up';
+                            bgColor = 'var(--accent)';
+                            sign = '-';
+                            break;
+                        case 'receive':
+                            icon = 'fa-arrow-down';
+                            bgColor = 'var(--success)';
+                            sign = '+';
+                            break;
+                        case 'swap':
+                            icon = 'fa-exchange-alt';
+                            bgColor = 'var(--primary)';
+                            sign = '';
+                            break;
+                        case 'buy':
+                            icon = 'fa-chart-line';
+                            bgColor = 'var(--success)';
+                            sign = '-';
+                            break;
+                        case 'deposit':
+                            icon = 'fa-money-bill-wave';
+                            bgColor = 'var(--warning)';
+                            sign = '+';
+                            break;
+                    }
+                    
+                    container.innerHTML += `
+                        <div class="asset-item">
+                            <div class="asset-icon" style="background: ${bgColor};"><i class="fas ${icon}"></i></div>
+                            <div class="asset-details">
+                                <div class="asset-name">${this.getTransactionTitle(transaction)}</div>
+                                <div class="asset-amount">${transaction.date} ${transaction.details ? '· ' + transaction.details : ''}</div>
+                            </div>
+                            <div class="asset-value">
+                                <div class="asset-price">${sign}$${Math.abs(transaction.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${transaction.asset}</div>
+                                <div class="asset-change neutral">Completado</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            },
+            
+            getTransactionTitle: function(transaction) {
+                switch(transaction.type) {
+                    case 'send': return `Enviado a ${transaction.to}`;
+                    case 'receive': return `Recibido de ${transaction.from}`;
+                    case 'swap': return `Intercambio completado`;
+                    case 'buy': return `Compra de ${transaction.asset}`;
+                    case 'deposit': return `Depósito bancario`;
+                    default: return `Transacción`;
+                }
+            },
+            
+            showSendModal: function() {
+                uiController.showModal('sendModal');
+            },
+            
+            showReceiveModal: function() {
+                uiController.showModal('receiveModal');
+            },
+            
+            showSwapModal: function() {
+                // Reset form
+                document.getElementById('swapFromAmount').value = '';
+                document.getElementById('swapToAmount').value = '';
+                tradingController.calculateSwapRate();
+                uiController.showModal('swapModal');
+            },
+            
+            showBuyModal: function() {
+                // Reset form
+                document.getElementById('buyAmount').value = '';
+                document.getElementById('buyTotal').value = '$0.00';
+                tradingController.calculateBuyTotal();
+                uiController.showModal('buyModal');
+            }
+        };
+
+        // Módulo: Controlador de Trading
+        const tradingController = {
+            currentTradingPair: 'BTCUSD',
+            currentPrices: {
+                'BTCUSD': 57342.80,
+                'ETHUSD': 3425.60,
+                'AAPL': 182.50,
+                'TSLA': 237.45,
+                'SPY': 452.36
+            },
+            swapRates: {
+                'ETHUSDC': 3425.60,
+                'BTCUSDC': 57342.80,
+                'ETHBTC': 0.0597,
+                'USDCETH': 0.000292,
+                'USDCBTC': 0.00001744,
+                'BTCETH': 16.75
+            },
+            
+            switchTradingPair: function(pair) {
+                this.currentTradingPair = pair;
+                
+                // Deactivate all trading pairs
+                document.querySelectorAll('.trading-pair').forEach(p => {
+                    p.classList.remove('active');
+                });
+                
+                // Activate selected trading pair
+                const tradingPairs = document.querySelectorAll('.trading-pair');
+                const activeIndex = Array.from(tradingPairs).findIndex(p => 
+                    p.getAttribute('onclick').includes(`'${pair}'`)
+                );
+                
+                if (activeIndex >= 0) {
+                    tradingPairs[activeIndex].classList.add('active');
+                }
+                
+                // Update chart title
+                document.getElementById('chart-title').textContent = pair;
+                
+                // Update chart data
+                this.updateSimpleChart(pair);
+            },
+            
+            generateChartData: function(pair) {
+                const baseValue = this.currentPrices[pair];
+                const data = [];
+                let value = baseValue;
+                
+                for (let i = 0; i < 9; i++) {
+                    // Variación aleatoria pero consistente
+                    const variation = (Math.random() - 0.5) * (baseValue * 0.05);
+                    value += variation;
+                    data.push(value);
+                }
+                
+                return data;
+            },
+            
+            updateSimpleChart: function(pair) {
+                const data = this.generateChartData(pair);
+                const maxVal = Math.max(...data);
+                const minVal = Math.min(...data);
+                const range = maxVal - minVal;
+                
+                // Generar puntos para el SVG
+                let pathData = '';
+                let areaData = '';
+                
+                data.forEach((value, index) => {
+                    const x = index * 50;
+                    // Normalizar el valor entre 0 y 200 (altura del SVG)
+                    const y = 200 - ((value - minVal) / range * 180 + 10);
+                    
+                    if (index === 0) {
+                        pathData = `M0,${y}`;
+                        areaData = `M0,${y}`;
+                    } else {
+                        pathData += ` L${x},${y}`;
+                        areaData += ` L${x},${y}`;
+                    }
+                });
+                
+                // Cerrar el área para el relleno
+                areaData += ` L${400},200 L0,200`;
+                
+                // Actualizar el SVG
+                document.getElementById('chart-line').setAttribute('d', pathData);
+                document.getElementById('chart-area').setAttribute('d', areaData);
+                
+                // Actualizar el precio mostrado
+                const currentPrice = data[data.length - 1];
+                document.getElementById('current-price').value = `$${currentPrice.toFixed(2)}`;
+                document.getElementById('modal-trade-price').value = `$${currentPrice.toFixed(2)}`;
+                
+                // Actualizar cálculos
+                this.calculateTradeTotal();
+                this.calculateModalTradeTotal();
+            },
+            
+            calculateTradeTotal: function() {
+                const amount = parseFloat(document.getElementById('trade-amount').value) || 0;
+                const price = parseFloat(document.getElementById('current-price').value.replace('$', '').replace(',', '')) || 0;
+                const total = amount * price;
+                document.getElementById('trade-total').value = `$${total.toFixed(2)}`;
+            },
+            
+            calculateModalTradeTotal: function() {
+                const amount = parseFloat(document.getElementById('modal-trade-amount').value) || 0;
+                const price = parseFloat(document.getElementById('modal-trade-price').value.replace('$', '').replace(',', '')) || 0;
+                const total = amount * price;
+                document.getElementById('modal-trade-total').value = `$${total.toFixed(2)}`;
+            },
+            
+            calculateSwapResult: function() {
+                const fromAsset = document.getElementById('swapFromAsset').value;
+                const toAsset = document.getElementById('swapToAsset').value;
+                const amount = parseFloat(document.getElementById('swapFromAmount').value) || 0;
+                
+                if (fromAsset && toAsset && amount > 0) {
+                    const rateKey = `${fromAsset}${toAsset}`;
+                    const rate = this.swapRates[rateKey] || 1;
+                    const result = amount * rate;
+                    
+                    document.getElementById('swapToAmount').value = result.toFixed(6);
+                    document.getElementById('swapRate').value = `1 ${fromAsset} = ${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${toAsset}`;
+                }
+            },
+            
+            calculateSwapRate: function() {
+                const fromAsset = document.getElementById('swapFromAsset').value;
+                const toAsset = document.getElementById('swapToAsset').value;
+                
+                if (fromAsset && toAsset) {
+                    const rateKey = `${fromAsset}${toAsset}`;
+                    const rate = this.swapRates[rateKey] || 1;
+                    
+                    document.getElementById('swapRate').value = `1 ${fromAsset} = ${rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 })} ${toAsset}`;
+                    
+                    // Recalcular si hay cantidad ingresada
+                    this.calculateSwapResult();
+                }
+            },
+            
+            switchSwapAssets: function() {
+                const fromAsset = document.getElementById('swapFromAsset').value;
+                const toAsset = document.getElementById('swapToAsset').value;
+                const fromAmount = document.getElementById('swapFromAmount').value;
+                const toAmount = document.getElementById('swapToAmount').value;
+                
+                // Intercambiar activos
+                document.getElementById('swapFromAsset').value = toAsset;
+                document.getElementById('swapToAsset').value = fromAsset;
+                
+                // Intercambiar cantidades
+                document.getElementById('swapFromAmount').value = toAmount;
+                document.getElementById('swapToAmount').value = fromAmount;
+                
+                // Recalcular tasa
+                this.calculateSwapRate();
+            },
+            
+            calculateBuyTotal: function() {
+                const asset = document.getElementById('buyAsset').value;
+                const amount = parseFloat(document.getElementById('buyAmount').value) || 0;
+                
+                if (asset && amount > 0) {
+                    let price = 0;
+                    
+                    switch(asset) {
+                        case 'BTC': price = this.currentPrices['BTCUSD']; break;
+                        case 'ETH': price = this.currentPrices['ETHUSD']; break;
+                        case 'USDC': price = 1; break;
+                    }
+                    
+                    const total = amount * price;
+                    
+                    document.getElementById('buyPrice').value = `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    document.getElementById('buyTotal').value = `$${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                }
+            },
+            
+            showTradeModal: function(type, symbol = null) {
+                const title = document.getElementById('trade-modal-title');
+                const button = document.getElementById('trade-modal-button');
+                
+                const assetSymbol = symbol || this.currentTradingPair.replace('USD', '');
+                
+                if (type === 'buy') {
+                    title.textContent = `Comprar ${assetSymbol}`;
+                    button.textContent = 'Confirmar Compra';
+                    button.className = 'btn btn-primary';
+                    button.style.background = 'var(--success)';
+                } else {
+                    title.textContent = `Vender ${assetSymbol}`;
+                    button.textContent = 'Confirmar Venda';
+                    button.className = 'btn btn-primary';
+                    button.style.background = 'var(--danger)';
+                }
+                
+                // Reset amount
+                document.getElementById('modal-trade-amount').value = '';
+                document.getElementById('modal-trade-total').value = '$0.00';
+                
+                uiController.showModal('tradeModal');
+            },
+            
+            executeTrade: async function() {
+                const amount = parseFloat(document.getElementById('modal-trade-amount').value);
+                const price = parseFloat(document.getElementById('modal-trade-price').value.replace('$', '').replace(',', ''));
+                
+                if (!amount || amount <= 0) {
+                    notificationController.showNotification('Ingresa una cantidad válida', 'error');
+                    return;
+                }
+                
+                uiController.hideModal('tradeModal');
+                
+                // Mostrar loading en trading controls
+                document.getElementById('tradeLoading').style.display = 'flex';
+                
+                // Ejecutar trade
+                const result = await QuantumDB.apiCall('/trade/execute', {
+                    symbol: this.currentTradingPair.replace('USD', ''),
+                    side: document.getElementById('trade-modal-button').textContent.includes('Compra') ? 'buy' : 'sell',
+                    amount: amount,
+                    price: price
+                });
+                
+                // Ocultar loading
+                document.getElementById('tradeLoading').style.display = 'none';
+                
+                if (result.success) {
+                    // Actualizar UI
+                    await portfolioController.loadPortfolio();
+                    await transactionController.loadTransactions();
+                    
+                    notificationController.showNotification('Orden ejecutada correctamente');
+                } else {
+                    notificationController.showNotification('Error ejecutando la orden', 'error');
+                }
+            },
+            
+            executeSwap: async function() {
+                const fromAsset = document.getElementById('swapFromAsset').value;
+                const toAsset = document.getElementById('swapToAsset').value;
+                const fromAmount = parseFloat(document.getElementById('swapFromAmount').value);
+                const toAmount = parseFloat(document.getElementById('swapToAmount').value);
+                
+                if (!fromAmount || fromAmount <= 0) {
+                    notificationController.showNotification('Ingresa una cantidad válida', 'error');
+                    return;
+                }
+                
+                uiController.hideModal('swapModal');
+                
+                // Mostrar loading
+                notificationController.showNotification('Procesando intercambio...');
+                
+                // Ejecutar swap
+                const result = await QuantumDB.apiCall('/swap/execute', {
+                    fromAsset: fromAsset,
+                    toAsset: toAsset,
+                    fromAmount: fromAmount,
+                    toAmount: toAmount
+                });
+                
+                if (result.success) {
+                    // Actualizar UI
+                    await portfolioController.loadPortfolio();
+                    await transactionController.loadTransactions();
+                    
+                    notificationController.showNotification('Intercambio ejecutado correctamente');
+                } else {
+                    notificationController.showNotification('Error ejecutando el intercambio', 'error');
+                }
+            },
+            
+            executeBuy: async function() {
+                const asset = document.getElementById('buyAsset').value;
+                const amount = parseFloat(document.getElementById('buyAmount').value);
+                const price = parseFloat(document.getElementById('buyPrice').value.replace('$', '').replace(',', ''));
+                
+                if (!amount || amount <= 0) {
+                    notificationController.showNotification('Ingresa una cantidad válida', 'error');
+                    return;
+                }
+                
+                uiController.hideModal('buyModal');
+                
+                // Mostrar loading
+                notificationController.showNotification('Procesando compra...');
+                
+                // Ejecutar compra
+                const result = await QuantumDB.apiCall('/buy/execute', {
+                    asset: asset,
+                    amount: amount,
+                    price: price
+                });
+                
+                if (result.success) {
+                    // Actualizar UI
+                    await portfolioController.loadPortfolio();
+                    await transactionController.loadTransactions();
+                    
+                    notificationController.showNotification('Compra ejecutada correctamente');
+                } else {
+                    notificationController.showNotification('Error ejecutando la compra', 'error');
+                }
+            }
+        };
+
+        // Módulo: Controlador de Mercados
+        const marketController = {
+            currentMarket: 'crypto',
+            
+            switchMarket: function(market) {
+                this.currentMarket = market;
+                
+                // Deactivate all market tabs
+                document.querySelectorAll('.market-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Activate selected market tab
+                const marketTabs = document.querySelectorAll('.market-tab');
+                const activeIndex = Array.from(marketTabs).findIndex(tab => 
+                    tab.getAttribute('onclick').includes(`'${market}'`)
+                );
+                
+                if (activeIndex >= 0) {
+                    marketTabs[activeIndex].classList.add('active');
+                }
+                
+                // Hide all asset lists
+                document.querySelectorAll('#crypto-assets, #stocks-assets').forEach(list => {
+                    list.classList.add('hidden');
+                });
+                
+                // Show selected market assets
+                if (market === 'crypto') {
+                    document.getElementById('crypto-assets').classList.remove('hidden');
+                } else if (market === 'stocks') {
+                    document.getElementById('stocks-assets').classList.remove('hidden');
+                }
+            },
+            
+            switchMarketTab: function(market) {
+                // Deactivate all market tabs
+                document.querySelectorAll('.market-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // Activate selected market tab
+                const marketTabs = document.querySelectorAll('.market-tab');
+                const activeIndex = Array.from(marketTabs).findIndex(tab => 
+                    tab.getAttribute('onclick').includes(`'${market}'`)
+                );
+                
+                if (activeIndex >= 0) {
+                    marketTabs[activeIndex].classList.add('active');
+                }
+                
+                // Hide all market lists
+                document.querySelectorAll('#markets-crypto, #markets-stocks').forEach(list => {
+                    list.classList.add('hidden');
+                });
+                
+                // Show selected market list
+                if (market === 'crypto') {
+                    document.getElementById('markets-crypto').classList.remove('hidden');
+                } else if (market === 'stocks') {
+                    document.getElementById('markets-stocks').classList.remove('hidden');
+                }
+            },
+            
+            searchAssets: function(query) {
+                const cryptoItems = document.querySelectorAll('#markets-crypto .asset-item');
+                const stockItems = document.querySelectorAll('#markets-stocks .asset-item');
+                
+                const allItems = [...cryptoItems, ...stockItems];
+                
+                allItems.forEach(item => {
+                    const assetName = item.querySelector('.asset-name').textContent.toLowerCase();
+                    const assetSymbol = item.querySelector('.asset-amount').textContent.toLowerCase();
+                    
+                    if (assetName.includes(query.toLowerCase()) || assetSymbol.includes(query.toLowerCase())) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            },
+            
+            loadMarkets: async function() {
+                const cryptoMarkets = await QuantumDB.apiCall('/markets', { type: 'crypto' });
+                const stockMarkets = await QuantumDB.apiCall('/markets', { type: 'stocks' });
+                
+                if (cryptoMarkets && cryptoMarkets.length > 0) {
+                    this.renderMarkets(cryptoMarkets, 'crypto');
+                }
+                
+                if (stockMarkets && stockMarkets.length > 0) {
+                    this.renderMarkets(stockMarkets, 'stocks');
+                }
+            },
+            
+            renderMarkets: function(markets, type) {
+                const container = document.getElementById(`markets-${type}`);
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                markets.forEach(asset => {
+                    const changeClass = asset.change >= 0 ? 'positive' : 'negative';
+                    const changeIcon = asset.change >= 0 ? '▲' : '▼';
+                    
+                    container.innerHTML += `
+                        <div class="asset-item" onclick="assetController.showAssetDetails('${asset.symbol}')">
+                            <div class="asset-icon" style="background: ${type === 'crypto' ? 'var(--primary)' : portfolioController.getStockColor(asset.symbol)};">
+                                ${type === 'crypto' ? `<i class="fab fa-${asset.symbol.toLowerCase()}"></i>` : asset.symbol}
+                            </div>
+                            <div class="asset-details">
+                                <div class="asset-name">${asset.name}</div>
+                                <div class="asset-amount">${type === 'crypto' ? asset.symbol + '/USD' : 'NASDAQ: ' + asset.symbol}</div>
+                            </div>
+                            <div class="asset-value">
+                                <div class="asset-price">$${asset.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                <div class="asset-change ${changeClass}">${changeIcon} ${Math.abs(asset.change)}%</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        };
+
+        // Módulo: Controlador de Activos
+        const assetController = {
+            showAssetDetails: function(asset) {
+                // Obtener datos del activo
+                const portfolio = QuantumDB.currentUser.portfolio;
+                const assetData = portfolio.assets.find(a => a.symbol === asset);
+                
+                if (assetData) {
+                    document.getElementById('assetDetailsTitle').textContent = `Detalles de ${asset}`;
+                    
+                    // Configurar icono
+                    const iconElement = document.getElementById('assetDetailsIcon');
+                    if (['BTC', 'ETH', 'USDC', 'SOL', 'ADA', 'DOT'].includes(asset)) {
+                        iconElement.innerHTML = `<i class="fab fa-${asset.toLowerCase()}"></i>`;
+                    } else {
+                        iconElement.innerHTML = asset;
+                        iconElement.style.background = portfolioController.getStockColor(asset);
+                    }
+                    
+                    // Obtener precio actual del mercado
+                    let currentPrice = 0;
+                    let change = 0;
+                    
+                    if (['BTC', 'ETH', 'USDC', 'SOL', 'ADA', 'DOT'].includes(asset)) {
+                        const marketData = QuantumDB.currentUser.markets.crypto.find(m => m.symbol === asset);
+                        if (marketData) {
+                            currentPrice = marketData.price;
+                            change = marketData.change;
+                        }
+                    } else {
+                        const marketData = QuantumDB.currentUser.markets.stocks.find(m => m.symbol === asset);
+                        if (marketData) {
+                            currentPrice = marketData.price;
+                            change = marketData.change;
+                        }
+                    }
+                    
+                    // Actualizar detalles
+                    document.getElementById('assetDetailsPrice').textContent = `$${currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    document.getElementById('assetDetailsChange').textContent = `${change >= 0 ? '+' : ''}${change}%`;
+                    document.getElementById('assetDetailsChange').className = `detail-value ${change >= 0 ? 'positive' : 'negative'}`;
+                    document.getElementById('assetDetailsAmount').textContent = `${assetData.amount} ${asset}`;
+                    document.getElementById('assetDetailsValue').textContent = `$${assetData.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    
+                    uiController.showModal('assetDetailsModal');
+                }
+            }
+        };
+
+        // Módulo: Controlador de MT5
+        const mt5Controller = {
+            connectToMT5: async function() {
+                const mt5Form = document.getElementById('mt5Form');
+                if (mt5Form.style.display === 'none') {
+                    mt5Form.style.display = 'block';
+                    return;
+                }
+                
+                const server = document.getElementById('mt5Server').value;
+                const account = document.getElementById('mt5Account').value;
+                const password = document.getElementById('mt5Password').value;
+                
+                if (!server || !account || !password) {
+                    notificationController.showNotification('Por favor, completa todos los campos', 'error');
+                    return;
+                }
+                
+                this.updateMT5Status('connecting', 'Conectando...');
+                
+                const response = await QuantumDB.apiCall('/mt5/connect', {
+                    server: server,
+                    account: account,
+                    password: password
+                });
+                
+                if (response.success) {
+                    this.updateMT5Status('connected', 'Conectado a MT5');
+                    notificationController.showNotification('Conexión exitosa con MetaTrader 5');
+                    document.getElementById('mt5Form').style.display = 'none';
+                } else {
+                    this.updateMT5Status('disconnected', 'Error de conexión');
+                    notificationController.showNotification('Error al conectar con MetaTrader 5: ' + response.error, 'error');
+                }
+            },
+            
+            disconnectFromMT5: async function() {
+                const response = await QuantumDB.apiCall('/mt5/disconnect');
+                this.updateMT5Status('disconnected', 'Desconectado');
+                notificationController.showNotification(response.message);
+            },
+            
+            saveMT5Credentials: function() {
+                // Esta función se llama desde el formulario de MT5
+                this.connectToMT5();
+            },
+            
+            checkMT5Status: async function() {
+                const response = await QuantumDB.apiCall('/mt5/status');
+                if (response.connected) {
+                    this.updateMT5Status('connected', 'Conectado a MT5');
+                } else {
+                    this.updateMT5Status('disconnected', 'Desconectado');
+                }
+            },
+            
+            updateMT5Status: function(status, text) {
+                const indicator = document.getElementById('mt5StatusIndicator');
+                const statusText = document.getElementById('mt5StatusText');
+                
+                indicator.className = 'status-indicator ' + status;
+                statusText.textContent = text;
+            }
+        };
+
+        // Módulo: Controlador de Perfil
+        const profileController = {
+            showProfileModal: function() {
+                uiController.showModal('profileModal');
+            },
+            
+            showSecuritySettings: function() {
+                notificationController.showNotification('Configuración de seguridad abierta');
+            },
+            
+            showNotificationsSettings: function() {
+                notificationController.showNotification('Configuración de notificaciones abierta');
+            },
+            
+            showBackupSettings: function() {
+                notificationController.showNotification('Opciones de respaldo mostradas');
+            },
+            
+            showAppearanceSettings: function() {
+                notificationController.showNotification('Configuración de apariencia abierta');
+            },
+            
+            showPrivacySettings: function() {
+                notificationController.showNotification('Configuración de privacidad abierta');
+            },
+            
+            showHelp: function() {
+                notificationController.showNotification('Centro de ayuda abierto');
+            }
+        };
+
+        // Módulo: Controlador de Sincronización
+        const syncController = {
+            syncData: async function() {
+                notificationController.showNotification('Sincronizando datos...');
+                await portfolioController.loadPortfolio();
+                await transactionController.loadTransactions();
+                notificationController.showNotification('Datos actualizados');
+            }
+        };
+
+        // Módulo: Controlador de Notificaciones
+        const notificationController = {
+            showNotification: function(message, type = 'success') {
+                // Remove existing notification if any
+                const existingNotification = document.querySelector('.notification');
+                if (existingNotification) {
+                    existingNotification.remove();
+                }
+                
+                // Create new notification
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                
+                const iconColor = type === 'success' ? 'var(--success)' : 'var(--danger)';
+                const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+                
+                notification.innerHTML = `
+                    <i class="fas ${icon}" style="color: ${iconColor};"></i>
+                    <span>${message}</span>
+                `;
+                
+                document.body.appendChild(notification);
+                
+                // Remove notification after animation
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 3000);
+            },
+            
+            showNotificationCenter: function() {
+                document.getElementById('notificationCenter').classList.add('open');
+            },
+            
+            closeNotificationCenter: function() {
+                document.getElementById('notificationCenter').classList.remove('open');
+            }
+        };
+
+        // Módulo: Controlador de UI
+        const uiController = {
+            showModal: function(modalId) {
+                document.getElementById(modalId).style.display = 'flex';
+            },
+            
+            hideModal: function(modalId) {
+                document.getElementById(modalId).style.display = 'none';
+            }
+        };
+
+        // Inicializar la aplicación
+        async function initApp() {
+            // Cargar portfolio
+            await portfolioController.loadPortfolio();
+            
+            // Cargar transacciones
+            await transactionController.loadTransactions();
+            
+            // Cargar mercados
+            await marketController.loadMarkets();
+            
+            // Inicializar el gráfico
+            tradingController.updateSimpleChart(tradingController.currentTradingPair);
+            
+            // Verificar estado de MT5
+            mt5Controller.checkMT5Status();
+        }
+
+        // Inicializar la aplicación cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Quantum Wallet inicializada");
+            
+            // Add some interactive feedback
+            document.querySelectorAll('.action-btn, .asset-item, .nav-item').forEach(element => {
+                element.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.95)';
+                });
+                
+                element.addEventListener('touchend', function() {
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+
+        // Prevent zoom on double tap for mobile
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
